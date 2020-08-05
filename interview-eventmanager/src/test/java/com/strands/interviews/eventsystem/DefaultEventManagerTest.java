@@ -1,11 +1,15 @@
 package com.strands.interviews.eventsystem;
 
+import com.strands.interviews.eventsystem.events.CreationEvent;
 import com.strands.interviews.eventsystem.events.SimpleEvent;
 import com.strands.interviews.eventsystem.events.SubEvent;
 import com.strands.interviews.eventsystem.impl.DefaultEventManager;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class DefaultEventManagerTest
 {
@@ -44,6 +48,21 @@ public class DefaultEventManagerTest
         eventManager.registerListener("listener.mock.key", eventListenerMock);
         eventManager.publishEvent(new SubEvent(this));
         assertFalse(eventListenerMock.isCalled());
+    }
+
+    /**
+     * Check that when a new event listener is added with no events, it will listen to all events previously
+     * registered in the system
+     */
+    @Test
+    public void testListenerWithEmptyEventsListensToAllEvents() {
+        EventListenerMock eventListenerMockWithTwoEvents = new EventListenerMock(new Class[]{SubEvent.class, CreationEvent.class});
+        EventListenerMock eventListenerMockWithEmptyEvents = new EventListenerMock(new Class[]{});
+        eventManager.registerListener("listener.with.two.events.mock.key", eventListenerMockWithTwoEvents);
+        eventManager.registerListener("listener.with.empty.events.mock.key", eventListenerMockWithEmptyEvents);
+        eventManager.publishEvent(new SubEvent(this));
+        eventManager.publishEvent(new CreationEvent(this));
+        assertEquals(2, eventListenerMockWithEmptyEvents.getCount());
     }
 
     @Test

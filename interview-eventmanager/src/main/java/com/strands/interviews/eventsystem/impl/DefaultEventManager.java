@@ -4,7 +4,12 @@ import com.strands.interviews.eventsystem.EventManager;
 import com.strands.interviews.eventsystem.InterviewEvent;
 import com.strands.interviews.eventsystem.InterviewEventListener;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Manages the firing and receiving of events.
@@ -48,11 +53,23 @@ public class DefaultEventManager implements EventManager
 
         Class[] classes = listener.getHandledEventClasses();
 
+        if (classes.length == 0) {
+            subscribeListenerToAllEvents(listener);
+        }
+
         for (int i = 0; i < classes.length; i++)
             addToListenerList(classes[i], listener);
 
         listeners.put(listenerKey, listener);
     }
+
+    private void subscribeListenerToAllEvents(InterviewEventListener listener) {
+        for (Iterator it = listenersByClass.values().iterator(); it.hasNext();) {
+            List list = (List) it.next();
+            list.add(listener);
+        }
+    }
+
 
     public void unregisterListener(String listenerKey)
     {

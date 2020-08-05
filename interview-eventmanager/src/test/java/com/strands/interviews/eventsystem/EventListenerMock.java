@@ -4,7 +4,7 @@ class EventListenerMock implements InterviewEventListener
 {
     private boolean called;
     Class[] classes;
-    public int count;
+    private int count;
 
     public EventListenerMock(Class[] classes)
     {
@@ -30,5 +30,9 @@ class EventListenerMock implements InterviewEventListener
     public Class[] getHandledEventClasses()
     {
         return classes;
+    }
+
+    public int getCount() {
+        return count;
     }
 }
