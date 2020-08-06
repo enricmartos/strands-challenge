@@ -1,9 +1,13 @@
-package com.strands.interviews.eventsystem;
+package com.strands.interviews.eventsystem.listener;
+
+import com.strands.interviews.eventsystem.InterviewEvent;
+
+import java.util.List;
 
 /**
  * A simple event listener.
  */
-public interface InterviewEventListener
+public interface InterviewEventListener<T extends InterviewEvent>
 {
     /**
      * Perform some action as a response to an Interview event. The EventManager will
@@ -12,7 +16,7 @@ public interface InterviewEventListener
      *
      * @param event some event triggered within an Interview
      */
-    void handleEvent(InterviewEvent event);
+    void handleEvent(T event);
 
     /**
      * Determine which event classes this listener is interested in.
@@ -28,5 +32,14 @@ public interface InterviewEventListener
      *         or an empty array if the listener should receive all events. <b>Must not</b>
      *         return null.
      */
-    Class[] getHandledEventClasses();
+    List<T> getHandledEventClasses();
+
+    /**
+     * Determine if an Interview event is supported by the listener. If it is, it will handle this events whenever they
+     * are published. Otherwise, it will ignore them.
+     *
+     * @param event some InterviewEvent event
+     * @return True if an Interview event is supported by the listener. False, otherwise.
+     */
+    boolean supportsEvent(InterviewEvent event);
 }

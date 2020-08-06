@@ -1,12 +1,20 @@
 package com.strands.interviews.eventsystem;
 
-class EventListenerMock implements InterviewEventListener
+import com.strands.interviews.eventsystem.events.SimpleEvent;
+import com.strands.interviews.eventsystem.listener.InterviewEventListener;
+
+import java.util.List;
+
+/**
+ * EventListenerMock that supports subclasses of SimpleEvents
+ */
+class EventListenerMock<T extends InterviewEvent> implements InterviewEventListener
 {
     private boolean called;
-    Class[] classes;
+    List<T> classes;
     private int count;
 
-    public EventListenerMock(Class[] classes)
+    public EventListenerMock(List<T> classes)
     {
         this.classes = classes;
     }
@@ -27,9 +35,13 @@ class EventListenerMock implements InterviewEventListener
         return called;
     }
 
-    public Class[] getHandledEventClasses()
+    public List<T> getHandledEventClasses()
     {
         return classes;
+    }
+
+    public boolean supportsEvent(InterviewEvent interviewEvent) {
+        return interviewEvent instanceof SimpleEvent;
     }
 
     public int getCount() {

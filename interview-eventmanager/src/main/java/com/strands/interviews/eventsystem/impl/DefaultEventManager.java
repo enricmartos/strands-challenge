@@ -2,14 +2,16 @@ package com.strands.interviews.eventsystem.impl;
 
 import com.strands.interviews.eventsystem.EventManager;
 import com.strands.interviews.eventsystem.InterviewEvent;
-import com.strands.interviews.eventsystem.InterviewEventListener;
+import com.strands.interviews.eventsystem.listener.InterviewEventListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Manages the firing and receiving of events.
@@ -17,12 +19,12 @@ import java.util.Map;
  * <p>Any event passed to {@link #publishEvent} will be passed through to "interested" listeners.
  *
  * <p>Event listeners can register to receive events via
- * {@link #registerListener(String, com.strands.interviews.eventsystem.InterviewEventListener)}
+ * {@link #registerListener(String, InterviewEventListener)}
  */
 public class DefaultEventManager implements EventManager
 {
-    private Map listeners = new HashMap();
-    private Map listenersByClass = new HashMap();
+    private Map<String, InterviewEventListener> listeners = new HashMap();
+    private Map<InterviewEvent, List<InterviewEventListener>> listenersByClass = new HashMap();
 
     public void publishEvent(InterviewEvent event)
     {
@@ -32,12 +34,24 @@ public class DefaultEventManager implements EventManager
             return;
         }
 
-        sendEventTo(event, calculateListeners(event.getClass()));
+        sendEventTo(event, calculateListeners(event));
     }
 
-    private Collection calculateListeners(Class eventClass)
-    {
-        return (Collection) listenersByClass.get(eventClass);
+    private Set<InterviewEventListener> calculateListeners(InterviewEvent eventClass) {
+        Set<InterviewEventListener> allListeners = new HashSet<InterviewEventListener>();
+        for (InterviewEvent event : listenersByClass.keySet()) {
+            allListeners.addAll(listenersByClass.get(event));
+
+        }
+
+        Iterator<InterviewEventListener> iterator = allListeners.iterator();
+        while (iterator.hasNext()) {
+            if (!iterator.next().supportsEvent(eventClass)) {
+                iterator.remove();
+            }
+        }
+
+        return allListeners;
     }
 
     public void registerListener(String listenerKey, InterviewEventListener listener)
@@ -51,14 +65,15 @@ public class DefaultEventManager implements EventManager
         if (listeners.containsKey(listenerKey))
             unregisterListener(listenerKey);
 
-        Class[] classes = listener.getHandledEventClasses();
+        List<InterviewEvent> classes = listener.getHandledEventClasses();
 
-        if (classes.length == 0) {
+        if (classes.size() == 0) {
             subscribeListenerToAllEvents(listener);
         }
 
-        for (int i = 0; i < classes.length; i++)
-            addToListenerList(classes[i], listener);
+        for (InterviewEvent event : classes)
+            addToListenerList(event, listener);
+
 
         listeners.put(listenerKey, listener);
     }
@@ -73,7 +88,7 @@ public class DefaultEventManager implements EventManager
 
     public void unregisterListener(String listenerKey)
     {
-        InterviewEventListener listener = (InterviewEventListener) listeners.get(listenerKey);
+        InterviewEventListener listener = listeners.get(listenerKey);
 
         for (Iterator it = listenersByClass.values().iterator(); it.hasNext();)
         {
@@ -96,12 +111,11 @@ public class DefaultEventManager implements EventManager
         }
     }
 
-    private void addToListenerList(Class aClass, InterviewEventListener listener)
-    {
+    private void addToListenerList(InterviewEvent aClass, InterviewEventListener listener) {
         if (!listenersByClass.containsKey(aClass))
             listenersByClass.put(aClass, new ArrayList());
 
-        ((List)listenersByClass.get(aClass)).add(listener);
+        listenersByClass.get(aClass).add(listener);
     }
 
     public Map getListeners()

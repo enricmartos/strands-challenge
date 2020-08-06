@@ -1,5 +1,7 @@
 package com.strands.interviews.eventsystem;
 
+import com.strands.interviews.eventsystem.listener.InterviewEventListener;
+
 public interface EventManager
 {
     /**

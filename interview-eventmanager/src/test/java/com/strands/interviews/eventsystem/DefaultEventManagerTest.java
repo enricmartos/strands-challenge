@@ -6,6 +6,9 @@ import com.strands.interviews.eventsystem.events.SubEvent;
 import com.strands.interviews.eventsystem.impl.DefaultEventManager;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,30 +27,33 @@ public class DefaultEventManagerTest
     @Test
     public void testRegisterListenerAndPublishEvent()
     {
-        EventListenerMock eventListenerMock = new EventListenerMock(new Class[]{SimpleEvent.class});
+        EventListenerMock eventListenerMock = new EventListenerMock(Arrays.asList(new SimpleEvent(this)));
         eventManager.registerListener("some.key", eventListenerMock);
         eventManager.publishEvent(new SimpleEvent(this));
         assertTrue(eventListenerMock.isCalled());
     }
 
+    /**
+     * Check that when a SubEvent (subclass) is published, the listeners of unrelated Events will not be notified
+     */
     @Test
     public void testListenerWithoutMatchingEventClass()
     {
-        EventListenerMock eventListenerMock = new EventListenerMock(new Class[]{SubEvent.class});
+        EventListenerMock eventListenerMock = new EventListenerMock(Arrays.asList(new SubEvent(this)));
         eventManager.registerListener("some.key", eventListenerMock);
-        eventManager.publishEvent(new SimpleEvent(this));
+        eventManager.publishEvent(new EventMock(this));
         assertFalse(eventListenerMock.isCalled());
     }
 
     /**
-     * Check that when a SubEvent is published, the listeners of SimpleEvent do not receive the notification
+     * Check that when a SimpleEvent (superclass) is published, the listeners of SimpleEvent subclasses will be notified
      */
     @Test
-    public void testSimpleEventListenerThatRejectsSubEvents() {
-        EventListenerMock eventListenerMock = new EventListenerMock(new Class[]{SimpleEvent.class});
+    public void testSimpleEventListenerThatAcceptsSubEvents() {
+        EventListenerMock eventListenerMock = new EventListenerMock(Arrays.asList(new SimpleEvent(this)));
         eventManager.registerListener("listener.mock.key", eventListenerMock);
         eventManager.publishEvent(new SubEvent(this));
-        assertFalse(eventListenerMock.isCalled());
+        assertTrue(eventListenerMock.isCalled());
     }
 
     /**
@@ -56,8 +62,8 @@ public class DefaultEventManagerTest
      */
     @Test
     public void testListenerWithEmptyEventsListensToAllEvents() {
-        EventListenerMock eventListenerMockWithTwoEvents = new EventListenerMock(new Class[]{SubEvent.class, CreationEvent.class});
-        EventListenerMock eventListenerMockWithEmptyEvents = new EventListenerMock(new Class[]{});
+        EventListenerMock eventListenerMockWithTwoEvents = new EventListenerMock(Arrays.asList(new SimpleEvent(this), new CreationEvent(this)));
+        EventListenerMock eventListenerMockWithEmptyEvents = new EventListenerMock(new ArrayList());
         eventManager.registerListener("listener.with.two.events.mock.key", eventListenerMockWithTwoEvents);
         eventManager.registerListener("listener.with.empty.events.mock.key", eventListenerMockWithEmptyEvents);
         eventManager.publishEvent(new SubEvent(this));
@@ -68,8 +74,8 @@ public class DefaultEventManagerTest
     @Test
     public void testUnregisterListener()
     {
-        EventListenerMock eventListenerMock = new EventListenerMock(new Class[]{SimpleEvent.class});
-        EventListenerMock eventListenerMock2 = new EventListenerMock(new Class[]{SimpleEvent.class});
+        EventListenerMock eventListenerMock = new EventListenerMock(Arrays.asList(new SimpleEvent(this)));
+        EventListenerMock eventListenerMock2 = new EventListenerMock(Arrays.asList(new SimpleEvent(this)));
 
         eventManager.registerListener("some.key", eventListenerMock);
         eventManager.registerListener("another.key", eventListenerMock2);
@@ -89,7 +95,7 @@ public class DefaultEventManagerTest
     {
         DefaultEventManager dem = (DefaultEventManager)eventManager;
         assertEquals(0, dem.getListeners().size());
-        eventManager.registerListener("some.key", new EventListenerMock(new Class[]{SimpleEvent.class}));
+        eventManager.registerListener("some.key", new EventListenerMock(Arrays.asList(new SimpleEvent(this))));
         assertEquals(1, dem.getListeners().size());
         eventManager.unregisterListener("this.key.is.not.registered");
         assertEquals(1, dem.getListeners().size());
@@ -103,8 +109,8 @@ public class DefaultEventManagerTest
     @Test
     public void testDuplicateKeysForListeners()
     {
-        EventListenerMock eventListenerMock = new EventListenerMock(new Class[]{SimpleEvent.class});
-        EventListenerMock eventListenerMock2 = new EventListenerMock(new Class[]{SimpleEvent.class});
+        EventListenerMock eventListenerMock = new EventListenerMock(Arrays.asList(new SimpleEvent(this)));
+        EventListenerMock eventListenerMock2 = new EventListenerMock(Arrays.asList(new SimpleEvent(this)));
 
         eventManager.registerListener("some.key", eventListenerMock);
         eventManager.registerListener("some.key", eventListenerMock2);
